@@ -1,0 +1,13 @@
+{
+    "errors": {
+        "Request.Required": "Dados da requisição inválidos.",
+        "Exception.Unexpected": "Ocorreu um erro inesperado.",
+
+        "General.Validation": "Ocorreu um erro de validação ao processar solicitação. Para mais informações, entre em contato com o suporte",
+        "General.Unauthorized": "Ocorreu um erro de autorização ao processar solicitação. Para mais informações, entre em contato com o suporte",
+        "General.Forbidden": "Ocorreu um erro de permissão ao processar solicitação. Para mais informações, entre em contato com o suporte",
+        "General.NotFound": "Ocorreu um erro ao localizar dados da solicitação. Para mais informações, entre em contato com o suporte",
+        "General.Conflict": "Ocorreu um conflito ao processar solicitação. Para mais informações, entre em contato com o suporte",
+        "General.Unexpected": "Ocorreu um erro inesperado ao processar solicitação. Para mais informações, entre em contato com o suporte."
+    }
+}
