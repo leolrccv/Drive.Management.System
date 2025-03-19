@@ -3,7 +3,7 @@ using ErrorOr;
 using MediatR;
 using System.IO.Compression;
 
-namespace Application.Commands.v1;
+namespace Application.Commands.v1.ConvertFile;
 
 public class ConvertFileCommandHandler() : IRequestHandler<ConvertFileCommand, ErrorOr<ConvertFileCommandResponse>>
 {
