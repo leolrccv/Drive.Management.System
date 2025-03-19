@@ -37,12 +37,9 @@ public class DocToMdConverter : IFileConverter
         var body = wordDoc.MainDocumentPart?.Document?.Body
             ?? throw new InvalidOperationException("Document body not found");
 
-        foreach (var paragraph in body.Elements<Paragraph>())
+        foreach (var paragraph in GetValidParagraphs(body))
         {
             var text = paragraph.InnerText.Trim();
-
-            if (string.IsNullOrWhiteSpace(text)) continue;
-
             AppendFormattedText(markdownText, text);
         }
 
@@ -75,6 +72,9 @@ public class DocToMdConverter : IFileConverter
     {
         if (File.Exists(filePath)) File.Delete(filePath);
     }
+
+    private static IEnumerable<Paragraph> GetValidParagraphs(Body body) =>
+        body.Elements<Paragraph>().Where(e => !string.IsNullOrWhiteSpace(e.InnerText));
 
     private static string GetMarkdownFilePath(string fileName) =>
         Path.ChangeExtension(fileName, FileTypes.MdExtension);

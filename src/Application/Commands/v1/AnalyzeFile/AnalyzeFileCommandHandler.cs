@@ -1,10 +1,8 @@
 ﻿using Application.Contracts;
+using Application.Converters.FromDocx;
 using Application.Models;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
 using ErrorOr;
 using MediatR;
-using System.Text;
 
 namespace Application.Commands.v1.AnalyzeFile;
 public class AnalyzeFileCommandHandler(IGeminiClient _geminiClient) : IRequestHandler<AnalyzeFileCommand, ErrorOr<AnalyzeFileCommandResponse>>
@@ -13,11 +11,9 @@ public class AnalyzeFileCommandHandler(IGeminiClient _geminiClient) : IRequestHa
     {
         try
         {
-            using var fileStream = request.FormFile.OpenReadStream();
+            var fileModel = await new DocToStrConverter().ConvertAsync(request.FormFile);
 
-            var fileContent = ConvertWordToText(fileStream);
-
-            var prompt = "Resuma o seguinte conteudo de arquivo: " + fileContent;
+            var prompt = "Resuma o seguinte conteudo de arquivo: " + fileModel.Content;
 
             var geminiModel = new GeminiModel([new Content([new Part(prompt)])]);
 
@@ -37,27 +33,5 @@ public class AnalyzeFileCommandHandler(IGeminiClient _geminiClient) : IRequestHa
             ?? "Nenhuma resposta gerada pela IA.";
 
         return new AnalyzeFileCommandResponse(textResponse);
-    }
-
-    private static string ConvertWordToText(Stream sourceStream)
-    {
-        var sb = new StringBuilder();
-
-        using var wordDoc = WordprocessingDocument.Open(sourceStream, false);
-
-        var body = wordDoc.MainDocumentPart?.Document?.Body
-            ?? throw new InvalidOperationException("Document body not found");
-
-        foreach (var paragraph in body.Elements<Paragraph>())
-        {
-            var text = paragraph.InnerText.Trim();
-
-            if (string.IsNullOrWhiteSpace(text)) continue;
-
-            sb.AppendLine(text);
-            sb.AppendLine();
-        }
-
-        return sb.ToString();
     }
 }
