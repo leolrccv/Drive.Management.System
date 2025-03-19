@@ -8,7 +8,7 @@ using HtmlToOpenXml;
 using Markdig;
 using Microsoft.AspNetCore.Http;
 
-namespace Application.Converters;
+namespace Application.Converters.FromMd;
 
 public class MdToDocConverter : IFileConverter
 {

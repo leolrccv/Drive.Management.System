@@ -5,7 +5,7 @@ using Markdig;
 using Microsoft.AspNetCore.Http;
 using PuppeteerSharp;
 
-namespace Application.Converters;
+namespace Application.Converters.FromMd;
 
 public class MdToPdfConverter : IFileConverter
 {

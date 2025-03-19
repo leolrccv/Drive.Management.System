@@ -6,7 +6,7 @@ using System.Text;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
-namespace Application.Converters;
+namespace Application.Converters.FromPdf;
 public class PdfToMdConverter : IFileConverter
 {
     public async Task<FileModel> ConvertAsync(IFormFile file)

@@ -4,7 +4,7 @@ using Application.Models;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 
-namespace Application.Converters;
+namespace Application.Converters.FromDocx;
 public class DocToPdfConverter : IFileConverter
 {
     public async Task<FileModel> ConvertAsync(IFormFile file)

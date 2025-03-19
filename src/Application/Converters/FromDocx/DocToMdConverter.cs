@@ -6,7 +6,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 
-namespace Application.Converters;
+namespace Application.Converters.FromDocx;
 public class DocToMdConverter : IFileConverter
 {
     public async Task<FileModel> ConvertAsync(IFormFile file)

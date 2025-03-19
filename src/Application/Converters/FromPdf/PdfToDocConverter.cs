@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
-namespace Application.Converters;
+namespace Application.Converters.FromPdf;
 public class PdfToDocConverter : IFileConverter
 {
     public async Task<FileModel> ConvertAsync(IFormFile file)
