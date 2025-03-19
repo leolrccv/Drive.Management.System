@@ -11,31 +11,52 @@ public class MdToPdfConverter : IFileConverter
 {
     public async Task<FileModel> ConvertAsync(IFormFile file)
     {
+        var outputFilePath = Path.ChangeExtension(file.FileName, FileTypes.PdfExtension);
+
+        try
+        {
+            var htmlContent = await ConvertMarkdownToHtmlAsync(file);
+            await GeneratePdfFromHtmlAsync(htmlContent, outputFilePath);
+            return await MapResponseFileAsync(outputFilePath);
+        }
+        catch (Exception)
+        {
+            DeleteFile(outputFilePath);
+            throw;
+        }
+    }
+
+    private static async Task<string> ConvertMarkdownToHtmlAsync(IFormFile file)
+    {
         using var streamReader = new StreamReader(file.OpenReadStream());
-        var markdownContent = await streamReader.ReadToEndAsync();
+        var content = await streamReader.ReadToEndAsync();
+        return Markdown.ToHtml(content);
+    }
 
-        string htmlContent = Markdown.ToHtml(markdownContent);
-
-        // Configurar Puppeteer para converter HTML para PDF
+    private static async Task GeneratePdfFromHtmlAsync(string htmlContent, string outputFilePath)
+    {
         await new BrowserFetcher().DownloadAsync();
+
         using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
         using var page = await browser.NewPageAsync();
 
-        // Carregar HTML no Puppeteer
         await page.SetContentAsync(htmlContent);
-
-        var inputFilePath = Path.GetTempFileName();
-        var outputFilePath = Path.ChangeExtension(inputFilePath, FileTypes.PdfExtension);
-
         await page.PdfAsync(outputFilePath);
+    }
 
+    private static async Task<FileModel> MapResponseFileAsync(string outputFilePath)
+    {
         var bytes = await File.ReadAllBytesAsync(outputFilePath);
         var memoryStream = new MemoryStream(bytes);
 
-        if (File.Exists(inputFilePath)) File.Delete(inputFilePath);
-        if (File.Exists(outputFilePath)) File.Delete(outputFilePath);
+        DeleteFile(outputFilePath);
 
-        memoryStream.Position = 0;
-        return new FileModel(Path.ChangeExtension(file.FileName, FileTypes.PdfExtension), memoryStream);
+        return new FileModel(outputFilePath, memoryStream);
+    }
+
+    private static void DeleteFile(string filePath)
+    {
+        if (File.Exists(filePath))
+            File.Delete(filePath);
     }
 }

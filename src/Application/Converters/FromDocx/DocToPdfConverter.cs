@@ -20,9 +20,10 @@ public class DocToPdfConverter : IFileConverter
 
             return await MapFileResponseAsync(file.FileName, outputFilePath);
         }
-        finally
+        catch (Exception)
         {
             DeleteFiles(inputFilePath, outputFilePath);
+            throw;
         }
     }
 
@@ -50,6 +51,8 @@ public class DocToPdfConverter : IFileConverter
 
         await process.WaitForExitAsync();
 
+        DeleteFiles(inputFilePath);
+
         if (process.ExitCode == 0) return;
 
         var error = await process.StandardError.ReadToEndAsync();
@@ -60,6 +63,9 @@ public class DocToPdfConverter : IFileConverter
     {
         var bytes = await File.ReadAllBytesAsync(outputFilePath);
         var memoryStream = new MemoryStream(bytes);
+
+        DeleteFiles(outputFilePath);
+
         return new FileModel(Path.ChangeExtension(originalFileName, FileTypes.PdfExtension), memoryStream);
     }
 

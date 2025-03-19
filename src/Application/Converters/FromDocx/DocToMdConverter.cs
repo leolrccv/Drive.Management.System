@@ -34,7 +34,7 @@ public class DocToMdConverter : IFileConverter
 
         using var wordDoc = WordprocessingDocument.Open(sourceStream, false);
 
-        var body = wordDoc.MainDocumentPart?.Document.Body
+        var body = wordDoc.MainDocumentPart?.Document?.Body
             ?? throw new InvalidOperationException("Document body not found");
 
         foreach (var paragraph in body.Elements<Paragraph>())

@@ -14,32 +14,64 @@ public class MdToDocConverter : IFileConverter
 {
     public async Task<FileModel> ConvertAsync(IFormFile file)
     {
+        try
+        {
+            var htmlContent = await ConvertMarkdownToHtmlAsync(file);
+
+            var documentStream = ConvertToDoc(htmlContent);
+
+            return MapResponseFile(file.FileName, documentStream);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    private static async Task<string> ConvertMarkdownToHtmlAsync(IFormFile file)
+    {
         using var streamReader = new StreamReader(file.OpenReadStream());
-        var markdownContent = await streamReader.ReadToEndAsync();
+        var content = await streamReader.ReadToEndAsync();
+        return Markdown.ToHtml(content);
+    }
 
-        var htmlContent = Markdown.ToHtml(markdownContent);
-
+    private static MemoryStream ConvertToDoc(string htmlContent)
+    {
         var memoryStream = new MemoryStream();
 
         using (var wordDocument = WordprocessingDocument.Create(memoryStream, WordprocessingDocumentType.Document, true))
         {
-            var mainPart = wordDocument.AddMainDocumentPart();
-
-            mainPart.Document = new Document();
-
-            var body = new Body();
-
-            var converter = new HtmlConverter(mainPart);
-            var paragraphs = converter.Parse(htmlContent);
-
-            foreach (var para in paragraphs)
-                body.Append(para);
-
-            mainPart.Document.Append(body);
-            mainPart.Document.Save();
+            var mainPart = CreateDocumentBase(wordDocument);
+            ConvertHtmlToDoc(mainPart, htmlContent);
         }
 
         memoryStream.Position = 0;
-        return new FileModel(Path.ChangeExtension(file.FileName, FileTypes.DocxExtension), memoryStream);
+        return memoryStream;
+    }
+
+    private static MainDocumentPart CreateDocumentBase(WordprocessingDocument wordDocument)
+    {
+        var mainPart = wordDocument.AddMainDocumentPart();
+        mainPart.Document = new Document(new Body());
+        return mainPart;
+    }
+
+    private static void ConvertHtmlToDoc(MainDocumentPart mainPart, string htmlContent)
+    {
+        var body = mainPart.Document.Body!;
+
+        var converter = new HtmlConverter(mainPart);
+        var paragraphs = converter.Parse(htmlContent);
+
+        foreach (var paragraph in paragraphs)
+            body.Append(paragraph);
+
+        mainPart.Document.Save();
+    }
+
+    private static FileModel MapResponseFile(string originalFileName, MemoryStream file)
+    {
+        var fileName = Path.ChangeExtension(originalFileName, FileTypes.DocxExtension);
+        return new FileModel(fileName, file);
     }
 }
