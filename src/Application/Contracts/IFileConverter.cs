@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Application.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace Application.Contracts;
 public interface IFileConverter
 {
-    Stream Convert(IFormFile file);
+    Task<FileModel> ConvertAsync(IFormFile file);
 }

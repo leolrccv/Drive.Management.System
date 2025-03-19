@@ -12,23 +12,20 @@ public class ConvertFileCommandHandler() : IRequestHandler<ConvertFileCommand, E
         var strategies = ConverterFactory.CreateStrategies(request.File.FileName);
 
         var zipStream = new MemoryStream();
+
         using (var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
         {
             foreach (var strategy in strategies)
             {
-                using var convertedFile = strategy.Convert(request.File);
-
-                var zipEntry = zipArchive.CreateEntry($"{Path.GetFileNameWithoutExtension(request.File.FileName)}.docx");
+                var converted = await strategy.ConvertAsync(request.File);
+                var zipEntry = zipArchive.CreateEntry(converted.FileName);
 
                 using var entryStream = zipEntry.Open();
-
-                await convertedFile.CopyToAsync(entryStream);
-
-                convertedFile.Dispose();
+                await converted.File.CopyToAsync(entryStream, cancellationToken);
             }
         }
 
-        zipStream.Position = 0; // Reseta a posição para o início
+        zipStream.Position = 0;
         return new ConvertFileCommandResponse(zipStream);
     }
 }

@@ -1,24 +1,43 @@
 ﻿using Application.Contracts;
+using Application.Extensions;
+using Application.Models;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 
 namespace Application.Converters;
 public class DocToPdfConverter : IFileConverter
 {
-    public Stream Convert(IFormFile file)
+    public async Task<FileModel> ConvertAsync(IFormFile file)
+    {
+        var inputFilePath = Path.GetTempFileName();
+        var outputFilePath = Path.ChangeExtension(inputFilePath, FileTypes.PdfExtension);
+
+        try
+        {
+            await SaveInputFileAsync(file, inputFilePath);
+
+            await ConvertToPdfAsync(inputFilePath, outputFilePath);
+
+            return await MapFileResponseAsync(file.FileName, outputFilePath);
+        }
+        finally
+        {
+            DeleteFiles(inputFilePath, outputFilePath);
+        }
+    }
+
+    private static async Task SaveInputFileAsync(IFormFile file, string inputFilePath)
     {
         using var sourceStream = file.OpenReadStream();
-
-        var inputFilePath = Path.GetTempFileName();
-
         using var fileStream = new FileStream(inputFilePath, FileMode.Create, FileAccess.Write);
-        sourceStream.CopyTo(fileStream);
+        await sourceStream.CopyToAsync(fileStream);
+    }
 
-        string outputFilePath = Path.ChangeExtension(inputFilePath, ".pdf");
-
+    private static async Task ConvertToPdfAsync(string inputFilePath, string outputFilePath)
+    {
         var startInfo = new ProcessStartInfo
         {
-            FileName = "libreoffice", 
+            FileName = "libreoffice",
             Arguments = $"--headless --convert-to pdf --outdir {Path.GetDirectoryName(outputFilePath)} {inputFilePath}",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -26,40 +45,27 @@ public class DocToPdfConverter : IFileConverter
             CreateNoWindow = true
         };
 
-        using (var process = Process.Start(startInfo))
-        {
-            process.WaitForExit();
+        using var process = Process.Start(startInfo)
+            ?? throw new Exception("Failed to start conversion process");
 
-            if(process.ExitCode != 0)
-            {
-                var error = process.StandardError.ReadToEnd();
-                throw new Exception(error);
-            }
-        }
+        await process.WaitForExitAsync();
 
-        // Retornar o arquivo convertido como Stream
-        var bytes = File.ReadAllBytes(outputFilePath);
-        var memoryStream = new MemoryStream(bytes);
+        if (process.ExitCode == 0) return;
 
-        if (File.Exists(inputFilePath)) File.Delete(inputFilePath);
-        if (File.Exists(outputFilePath)) File.Delete(outputFilePath);
-
-        memoryStream.Position = 0; // Resetar a posição para leitura
-        return memoryStream;
+        var error = await process.StandardError.ReadToEndAsync();
+        throw new Exception($"Conversion failed: {error}");
     }
-    //public Stream Convert(IFormFile file)
-    //{
-    //    using var docxFile = file.OpenReadStream();
 
-    //    Document document = new();
-    //    document.LoadFromStream(docxFile, FileFormat.Docx);
+    private static async Task<FileModel> MapFileResponseAsync(string originalFileName, string outputFilePath)
+    {
+        var bytes = await File.ReadAllBytesAsync(outputFilePath);
+        var memoryStream = new MemoryStream(bytes);
+        return new FileModel(Path.ChangeExtension(originalFileName, FileTypes.PdfExtension), memoryStream);
+    }
 
-    //    MemoryStream pdfStream = new();
-
-    //    document.SaveToStream(pdfStream, FileFormat.PDF);
-
-    //    pdfStream.Position = 0;
-
-    //    return pdfStream;
-    //}
+    private static void DeleteFiles(params string[] filePaths)
+    {
+        foreach (var filePath in filePaths)
+            if (File.Exists(filePath)) File.Delete(filePath);
+    }
 }

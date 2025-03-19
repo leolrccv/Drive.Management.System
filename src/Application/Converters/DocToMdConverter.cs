@@ -1,11 +1,81 @@
 ﻿using Application.Contracts;
+using Application.Extensions;
+using Application.Models;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Http;
+using System.Text;
 
 namespace Application.Converters;
 public class DocToMdConverter : IFileConverter
 {
-    public Stream Convert(IFormFile file)
+    public async Task<FileModel> ConvertAsync(IFormFile file)
     {
-        throw new NotImplementedException();
+        var outputFilePath = GetMarkdownFilePath(file.FileName);
+
+        try
+        {
+            using var sourceStream = file.OpenReadStream();
+
+            var markdownContent = ConvertWordToMarkdown(sourceStream);
+
+            return await MapFileResponseAsync(outputFilePath, markdownContent);
+        }
+        catch (Exception) //TODO: transformar em erros
+        {
+            DeleteFile(outputFilePath);
+            throw;
+        }
     }
+
+    private static string ConvertWordToMarkdown(Stream sourceStream)
+    {
+        var markdownText = new StringBuilder();
+
+        using var wordDoc = WordprocessingDocument.Open(sourceStream, false);
+
+        var body = wordDoc.MainDocumentPart?.Document.Body
+            ?? throw new InvalidOperationException("Document body not found");
+
+        foreach (var paragraph in body.Elements<Paragraph>())
+        {
+            var text = paragraph.InnerText.Trim();
+
+            if (string.IsNullOrWhiteSpace(text)) continue;
+
+            AppendFormattedText(markdownText, text);
+        }
+
+        return markdownText.ToString();
+    }
+
+    private static void AppendFormattedText(StringBuilder markdownText, string text)
+    {
+        var isHeading = text.Length < 50 && !text.EndsWith('.');
+
+        text = isHeading ? $"# {text}" : text;
+
+        markdownText.AppendLine(text);
+        markdownText.AppendLine();
+    }
+
+    private static async Task<FileModel> MapFileResponseAsync(string filePath, string content)
+    {
+        await File.WriteAllTextAsync(filePath, content);
+
+        var bytes = await File.ReadAllBytesAsync(filePath);
+        var memoryStream = new MemoryStream(bytes);
+
+        DeleteFile(filePath);
+
+        return new FileModel(filePath, memoryStream);
+    }
+
+    private static void DeleteFile(string filePath)
+    {
+        if (File.Exists(filePath)) File.Delete(filePath);
+    }
+
+    private static string GetMarkdownFilePath(string fileName) =>
+        Path.ChangeExtension(fileName, FileTypes.MdExtension);
 }

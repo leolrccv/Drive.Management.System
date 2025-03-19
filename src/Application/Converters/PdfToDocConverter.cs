@@ -1,43 +1,65 @@
 ﻿using Application.Contracts;
+using Application.Extensions;
+using Application.Models;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Http;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace Application.Converters;
 public class PdfToDocConverter : IFileConverter
 {
-    public Stream Convert(IFormFile file)
+    public async Task<FileModel> ConvertAsync(IFormFile file)
     {
-        var pdfStream = file.OpenReadStream();
+        using var pdfStream = file.OpenReadStream();
 
-        var tempFileName = Path.GetTempFileName();
+        var outputPath = Path.ChangeExtension(file.FileName, FileTypes.DocxExtension);
 
-        var docxPath = Path.ChangeExtension(tempFileName, ".docx");
-
-        using var wordDoc = WordprocessingDocument.Create(docxPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document);
-
-        var mainPart = wordDoc.AddMainDocumentPart();
-
-        mainPart.Document = new Document();
-
-        var body = mainPart.Document.AppendChild(new Body());
-
-        using var pdf = PdfDocument.Open(pdfStream);
-
-        foreach (var page in pdf.GetPages())
+        using (var wordDocument = WordprocessingDocument.Create(outputPath, WordprocessingDocumentType.Document))
         {
-            string text = page.Text;
+            var mainPart = wordDocument.AddMainDocumentPart();
 
-            body.AppendChild(new Paragraph(new Run(new Text(text))));
+            mainPart.Document = new Document();
+            Body body = mainPart.Document.AppendChild(new Body());
+
+            using (PdfDocument pdfDocument = PdfDocument.Open(pdfStream))
+            {
+                foreach (var page in pdfDocument.GetPages())
+                {
+                    string pageText = ContentOrderTextExtractor.GetText(page);
+
+                    var lines = pageText.Split('\n');
+                    foreach (var line in lines)
+                    {
+                        string trimmedLine = line.Trim();
+
+                        if (string.IsNullOrWhiteSpace(trimmedLine))
+                            continue;
+
+                        AddParagraph(body, trimmedLine);
+                    }
+                }
+            }
+
+            mainPart.Document.Save();
         }
 
-        var bytes = File.ReadAllBytes(docxPath);
+        var bytes = await File.ReadAllBytesAsync(outputPath);
         var memoryStream = new MemoryStream(bytes);
 
-        if (File.Exists(docxPath)) File.Delete(docxPath);
+        if (File.Exists(outputPath)) File.Delete(outputPath);
 
         memoryStream.Position = 0;
-        return memoryStream;
+        return new FileModel(Path.ChangeExtension(file.FileName, FileTypes.DocxExtension), memoryStream);
+    }
+
+    private static void AddParagraph(Body body, string text)
+    {
+        var paragraph = body.AppendChild(new Paragraph());
+        var run = paragraph.AppendChild(new Run());
+
+        run.AppendChild(new Text(text));
     }
 }
