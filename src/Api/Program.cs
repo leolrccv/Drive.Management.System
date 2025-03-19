@@ -1,12 +1,14 @@
 using Api.Extensions;
 using Application.Extensions;
+using Infrastructure.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddPresentation()
-    .AddApplication(builder.Configuration);
+    .AddApplication(builder.Configuration)
+    .AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

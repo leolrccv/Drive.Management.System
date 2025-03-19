@@ -1,4 +1,5 @@
 ﻿using Api.Providers;
+using Application.Commands.v1.AnalyzeFile;
 using Application.Commands.v1.ConvertFile;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -22,4 +23,8 @@ public class FileController(ILogger<FileController> _logger, IMediator _mediator
 
         return File(response.Value.Stream, "application/zip", "converted_files.zip");
     }
+
+    [HttpPost("v1/analyze-file")]
+    public async Task<IActionResult> AnalyzeFileAsync([FromForm] IFormFile file) =>
+      await ProcessRequestAsync(new AnalyzeFileCommand(file), StatusCodes.Status200OK);
 }
