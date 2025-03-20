@@ -28,7 +28,7 @@ public static class DependencyInjection
     }
 
     private static IServiceCollection AddFormOptions(this IServiceCollection services) =>
-        services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = 10 * 1024 * 1024);
+        services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = 1 * 1024 * 1024);
 
     private static IServiceCollection AddErrorProvider(this IServiceCollection services) =>
         services.AddScoped<IErrorProvider, ErrorProvider>();
