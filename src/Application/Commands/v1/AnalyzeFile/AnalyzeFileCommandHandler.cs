@@ -1,30 +1,29 @@
 ﻿using Application.Contracts;
 using Application.Converters.FromDocx;
+using Application.Extensions;
 using Application.Models;
 using ErrorOr;
 using MediatR;
 
 namespace Application.Commands.v1.AnalyzeFile;
-public class AnalyzeFileCommandHandler(IGeminiClient _geminiClient) : IRequestHandler<AnalyzeFileCommand, ErrorOr<AnalyzeFileCommandResponse>>
+public class AnalyzeFileCommandHandler(IAwsClient _awsClient, IGeminiClient _geminiClient) : IRequestHandler<AnalyzeFileCommand, ErrorOr<AnalyzeFileCommandResponse>>
 {
     public async Task<ErrorOr<AnalyzeFileCommandResponse>> Handle(AnalyzeFileCommand request, CancellationToken cancellationToken)
     {
-        try
-        {
-            var fileModel = await new DocToStrConverter().ConvertAsync(request.FormFile);
+        var download = await _awsClient.DownloadFromS3Async(Path.ChangeExtension(request.FileName, FileTypes.DocxExtension));
+        if (download.IsError) return download.Errors;
 
-            var prompt = "Resuma o seguinte conteudo de arquivo: " + fileModel.Content;
+        using var file = download.Value;
 
-            var geminiModel = new GeminiModel([new Content([new Part(prompt)])]);
+        var content = DocToStrConverter.Convert(file);
 
-            var response = await _geminiClient.PostAsync(geminiModel, cancellationToken);
+        var prompt = $"Responda a pergunta com base no conteudo. Pergunta: {request.Question}. Conteúdo: {content}";
 
-            return MapResponse(response);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        var geminiModel = new GeminiModel([new Content([new Part(prompt)])]);
+
+        var response = await _geminiClient.PostAsync(geminiModel, cancellationToken);
+
+        return response.IsError ? response.Errors : MapResponse(response.Value);
     }
 
     private static AnalyzeFileCommandResponse MapResponse(GeminiResponse response)

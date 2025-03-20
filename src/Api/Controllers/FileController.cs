@@ -25,6 +25,6 @@ public class FileController(ILogger<FileController> _logger, IMediator _mediator
     }
 
     [HttpPost("v1/analyze-file")]
-    public async Task<IActionResult> AnalyzeFileAsync([FromForm] IFormFile file) =>
-      await ProcessRequestAsync(new AnalyzeFileCommand(file), StatusCodes.Status200OK);
+    public async Task<IActionResult> AnalyzeFileAsync(AnalyzeFileCommand request) =>
+      await ProcessRequestAsync(request, StatusCodes.Status200OK);
 }

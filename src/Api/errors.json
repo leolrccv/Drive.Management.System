@@ -1,13 +1,19 @@
 {
-    "errors": {
-        "Request.Required": "Dados da requisição inválidos.",
-        "Exception.Unexpected": "Ocorreu um erro inesperado.",
+  "errors": {
+    "Request.Required": "Dados da requisiï¿½ï¿½o invï¿½lidos.",
+    "Exception.Unexpected": "Ocorreu um erro inesperado.",
 
-        "General.Validation": "Ocorreu um erro de validação ao processar solicitação. Para mais informações, entre em contato com o suporte",
-        "General.Unauthorized": "Ocorreu um erro de autorização ao processar solicitação. Para mais informações, entre em contato com o suporte",
-        "General.Forbidden": "Ocorreu um erro de permissão ao processar solicitação. Para mais informações, entre em contato com o suporte",
-        "General.NotFound": "Ocorreu um erro ao localizar dados da solicitação. Para mais informações, entre em contato com o suporte",
-        "General.Conflict": "Ocorreu um conflito ao processar solicitação. Para mais informações, entre em contato com o suporte",
-        "General.Unexpected": "Ocorreu um erro inesperado ao processar solicitação. Para mais informações, entre em contato com o suporte."
-    }
+    "File.NotFound": "Arquivo nÃ£o localizado.",
+    "File.DownloadFailed": "Ocorreu um erro inesperado durante o download do arquivo.",
+    "File.UploadFailed": "Ocorreu um erro inesperado durante o upload do arquivo.",
+
+    "Gemini.Unexpected": "Ocorreu um erro inesperado ao comunicar-se com o Gemini.",
+
+    "General.Validation": "Ocorreu um erro de validaï¿½ï¿½o ao processar solicitaï¿½ï¿½o. Para mais informaï¿½ï¿½es, entre em contato com o suporte",
+    "General.Unauthorized": "Ocorreu um erro de autorizaï¿½ï¿½o ao processar solicitaï¿½ï¿½o. Para mais informaï¿½ï¿½es, entre em contato com o suporte",
+    "General.Forbidden": "Ocorreu um erro de permissï¿½o ao processar solicitaï¿½ï¿½o. Para mais informaï¿½ï¿½es, entre em contato com o suporte",
+    "General.NotFound": "Ocorreu um erro ao localizar dados da solicitaï¿½ï¿½o. Para mais informaï¿½ï¿½es, entre em contato com o suporte",
+    "General.Conflict": "Ocorreu um conflito ao processar solicitaï¿½ï¿½o. Para mais informaï¿½ï¿½es, entre em contato com o suporte",
+    "General.Unexpected": "Ocorreu um erro inesperado ao processar solicitaï¿½ï¿½o. Para mais informaï¿½ï¿½es, entre em contato com o suporte."
+  }
 }

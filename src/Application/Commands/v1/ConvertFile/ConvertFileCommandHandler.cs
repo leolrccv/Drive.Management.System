@@ -11,7 +11,8 @@ public class ConvertFileCommandHandler(IAwsClient _awsClient) : IRequestHandler<
 {
     public async Task<ErrorOr<ConvertFileCommandResponse>> Handle(ConvertFileCommand request, CancellationToken cancellationToken)
     {
-        await _awsClient.UploadToS3Async(new FileModel(request.File.FileName, request.File.OpenReadStream()));
+        var uploadStatus = await _awsClient.UploadToS3Async(new FileModel(request.File.FileName, request.File.OpenReadStream()));
+        if (uploadStatus.IsError) return uploadStatus.Errors;
 
         var strategies = ConverterFactory.CreateStrategies(request.File.FileName);
 
@@ -25,9 +26,10 @@ public class ConvertFileCommandHandler(IAwsClient _awsClient) : IRequestHandler<
                 var zipEntry = zipArchive.CreateEntry(converted.FileName);
 
                 using var entryStream = zipEntry.Open();
-                await converted.File!.CopyToAsync(entryStream, cancellationToken);
+                await converted.File.CopyToAsync(entryStream, cancellationToken);
 
-                await _awsClient.UploadToS3Async(converted);
+                uploadStatus = await _awsClient.UploadToS3Async(converted);
+                if (uploadStatus.IsError) return uploadStatus.Errors;
             }
         }
 

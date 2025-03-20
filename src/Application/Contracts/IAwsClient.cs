@@ -1,8 +1,10 @@
 ﻿using Application.Models;
+using ErrorOr;
 
 namespace Application.Contracts;
 
 public interface IAwsClient
 {
-    Task UploadToS3Async(FileModel fileModel);
+    Task<ErrorOr<Success>> UploadToS3Async(FileModel fileModel);
+    Task<ErrorOr<Stream>> DownloadFromS3Async(string fileName);
 }

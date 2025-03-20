@@ -1,17 +1,12 @@
-﻿using Application.Contracts;
-using Application.Models;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Http;
 using System.Text;
 
 namespace Application.Converters.FromDocx;
-public class DocToStrConverter : IFileConverter
+public class DocToStrConverter
 {
-    public Task<FileModel> ConvertAsync(IFormFile file)
+    public static string Convert(Stream fileStream)
     {
-        using var fileStream = file.OpenReadStream();
-
         var sb = new StringBuilder();
 
         using var wordDoc = WordprocessingDocument.Open(fileStream, false);
@@ -21,7 +16,7 @@ public class DocToStrConverter : IFileConverter
 
         WriteText(sb, body);
 
-        return Task.FromResult(new FileModel(file.FileName, Content: sb.ToString()));
+        return sb.ToString();
     }
 
     private static void WriteText(StringBuilder sb, Body body)
