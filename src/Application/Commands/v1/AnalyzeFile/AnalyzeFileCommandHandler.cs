@@ -8,6 +8,8 @@ using MediatR;
 namespace Application.Commands.v1.AnalyzeFile;
 public class AnalyzeFileCommandHandler(IAwsClient _awsClient, IGeminiClient _geminiClient) : IRequestHandler<AnalyzeFileCommand, ErrorOr<AnalyzeFileCommandResponse>>
 {
+    private const string Prompt = "Responda a pergunta com base no conteudo. Pergunta: {0}? Conteúdo: {1}";
+
     public async Task<ErrorOr<AnalyzeFileCommandResponse>> Handle(AnalyzeFileCommand request, CancellationToken cancellationToken)
     {
         var download = await _awsClient.DownloadFromS3Async(Path.ChangeExtension(request.FileName, FileTypes.DocxExtension));
@@ -17,7 +19,7 @@ public class AnalyzeFileCommandHandler(IAwsClient _awsClient, IGeminiClient _gem
 
         var content = DocToStrConverter.Convert(file);
 
-        var prompt = $"Responda a pergunta com base no conteudo. Pergunta: {request.Question}. Conteúdo: {content}";
+        var prompt = string.Format(Prompt, request.Question, content);
 
         var geminiModel = new GeminiModel([new Content([new Part(prompt)])]);
 
