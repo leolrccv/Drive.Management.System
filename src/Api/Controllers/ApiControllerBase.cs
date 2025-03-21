@@ -90,8 +90,8 @@ public class ApiControllerBase(ILogger _logger, IMediator _mediator, IErrorProvi
 
     private ObjectResult MapErrorResponse(List<Error> errors, int statusCode)
     {
-        var response = new ResponseBody(Notifications: errors.ToDictionary(
-                e => e.Code, e => _errorProvider.GetErrorMessage(e.Code, e.Description)));
+        var response = new ResponseBody(Notifications: errors.Select(e =>
+            _errorProvider.GetErrorMessage(e.Code, e.Description)));
 
         return StatusCode(statusCode, response);
     }
