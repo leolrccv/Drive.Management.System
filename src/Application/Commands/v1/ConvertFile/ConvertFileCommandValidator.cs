@@ -1,7 +1,15 @@
-﻿using FluentValidation;
+﻿using Application.Extensions;
+using FluentValidation;
 
 namespace Application.Commands.v1.ConvertFile;
 public class ConvertFileCommandValidator : AbstractValidator<ConvertFileCommand>
 {
-    //TODO: adicionar validator de file != null e length > 0
+    public ConvertFileCommandValidator()
+    {
+        RuleFor(x => x.File).NotEmpty().WithMessage("File.Required");
+
+        RuleFor(x => x.File.Length).GreaterThan(0).WithMessage("File.MinLength");
+
+        RuleFor(x => x.File.FileName).Must(x => FileTypes.GetAllowedTypes().Contains(Path.GetExtension(x))).WithMessage("File.InvalidType");
+    }
 }

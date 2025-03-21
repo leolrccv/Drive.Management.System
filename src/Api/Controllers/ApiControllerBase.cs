@@ -1,6 +1,7 @@
 ﻿using Api.Errors;
 using Api.Models;
 using Api.Providers;
+using Application.Commands.v1.Commons;
 using ErrorOr;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -28,10 +29,35 @@ public class ApiControllerBase(ILogger _logger, IMediator _mediator, IErrorProvi
         }
     }
 
+    protected async Task<IActionResult> ProcessRequestAsync<TResponse>(IRequest<ErrorOr<TResponse>>? request, string contentType, string fileResultName)
+        where TResponse : UploadFileCommandResponse
+    {
+        try
+        {
+            if (request is null)
+                return MapErrorResponse(RequestError.Invalid);
+
+            var response = await _mediator.Send(request);
+
+            return response.Match(
+                success => HandleSuccessResponse(success, contentType, fileResultName),
+                error => HandleErrorResponse(error));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unexpected error has occurred.");
+            return MapErrorResponse(RequestError.Unexpected);
+        }
+    }
+
     private IActionResult HandleSuccessResponse<TResponse>(TResponse response, int statusCode) =>
         statusCode == StatusCodes.Status204NoContent ?
             StatusCode(statusCode) :
             StatusCode(statusCode, new ResponseBody(response));
+
+    private IActionResult HandleSuccessResponse<TResponse>(TResponse response, string contentType, string fileResultName)
+        where TResponse : UploadFileCommandResponse =>
+        File(response.Stream, contentType, fileResultName);
 
     private ObjectResult HandleErrorResponse(List<Error> errors)
     {

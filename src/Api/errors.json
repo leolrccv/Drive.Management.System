@@ -3,6 +3,9 @@
     "Request.Required": "Dados da requisi��o inv�lidos.",
     "Exception.Unexpected": "Ocorreu um erro inesperado.",
 
+    "File.Required": "Obrigatório enviar um arquivo.",
+    "File.MinLength": "Arquivo encontra-se vazio.",
+    "File.InvalidType": "Tipo de arquivo enviado não é aceito.",
     "File.NotFound": "Arquivo não localizado.",
     "File.DownloadFailed": "Ocorreu um erro inesperado durante o download do arquivo.",
     "File.UploadFailed": "Ocorreu um erro inesperado durante o upload do arquivo.",
