@@ -1,8 +1,9 @@
 ﻿using Application.Models;
+using ErrorOr;
 using Microsoft.AspNetCore.Http;
 
 namespace Application.Contracts;
 public interface IFileConverter
 {
-    Task<FileModel> ConvertAsync(IFormFile file);
+    Task<ErrorOr<FileModel>> ConvertAsync(IFormFile file);
 }

@@ -1,18 +1,20 @@
 ﻿using Application.Contracts;
+using Application.Errors;
 using Application.Extensions;
 using Application.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using ErrorOr;
 using HtmlToOpenXml;
 using Markdig;
 using Microsoft.AspNetCore.Http;
 
 namespace Application.Converters.FromMd;
 
-public class MdToDocConverter : IFileConverter
+public class MdToDocxConverter : IFileConverter
 {
-    public async Task<FileModel> ConvertAsync(IFormFile file)
+    public async Task<ErrorOr<FileModel>> ConvertAsync(IFormFile file)
     {
         try
         {
@@ -24,7 +26,7 @@ public class MdToDocConverter : IFileConverter
         }
         catch (Exception)
         {
-            throw;
+            return ConverterError.Md.ToDocx;
         }
     }
 

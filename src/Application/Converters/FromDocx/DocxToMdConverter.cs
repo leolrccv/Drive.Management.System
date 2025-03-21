@@ -1,15 +1,17 @@
 ﻿using Application.Contracts;
+using Application.Errors;
 using Application.Extensions;
 using Application.Models;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using ErrorOr;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 
 namespace Application.Converters.FromDocx;
-public class DocToMdConverter : IFileConverter
+public class DocxToMdConverter : IFileConverter
 {
-    public async Task<FileModel> ConvertAsync(IFormFile file)
+    public async Task<ErrorOr<FileModel>> ConvertAsync(IFormFile file)
     {
         var outputFilePath = GetMarkdownFilePath(file.FileName);
 
@@ -21,10 +23,10 @@ public class DocToMdConverter : IFileConverter
 
             return await MapFileResponseAsync(outputFilePath, markdownContent);
         }
-        catch (Exception) //TODO: transformar em erros
+        catch (Exception)
         {
             DeleteFile(outputFilePath);
-            throw;
+            return ConverterError.Docx.ToMd;
         }
     }
 
@@ -34,8 +36,7 @@ public class DocToMdConverter : IFileConverter
 
         using var wordDoc = WordprocessingDocument.Open(sourceStream, false);
 
-        var body = wordDoc.MainDocumentPart?.Document?.Body
-            ?? throw new InvalidOperationException("Document body not found");
+        var body = wordDoc.MainDocumentPart.Document.Body;
 
         foreach (var paragraph in GetValidParagraphs(body))
         {

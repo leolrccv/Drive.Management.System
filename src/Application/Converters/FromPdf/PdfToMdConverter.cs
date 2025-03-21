@@ -1,6 +1,8 @@
 ﻿using Application.Contracts;
+using Application.Errors;
 using Application.Extensions;
 using Application.Models;
+using ErrorOr;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 using UglyToad.PdfPig;
@@ -10,7 +12,7 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 namespace Application.Converters.FromPdf;
 public class PdfToMdConverter : IFileConverter
 {
-    public async Task<FileModel> ConvertAsync(IFormFile file)
+    public async Task<ErrorOr<FileModel>> ConvertAsync(IFormFile file)
     {
         var outputFilePath = Path.ChangeExtension(file.FileName, FileTypes.MdExtension);
 
@@ -22,7 +24,7 @@ public class PdfToMdConverter : IFileConverter
         catch (Exception)
         {
             DeleteFile(outputFilePath);
-            throw;
+            return ConverterError.Pdf.ToMd;
         }
     }
 

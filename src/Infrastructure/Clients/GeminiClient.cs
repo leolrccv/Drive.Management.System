@@ -15,8 +15,8 @@ public class GeminiClient(HttpClient _httpClient, IOptions<ClientSettings> _opti
         try
         {
             var response = await _httpClient.PostAsync(
-          $"v1beta/models/gemini-2.0-flash:generateContent?key={_options.Value.GeminiApi.ApiKey}",
-          JsonContent.Create(request), cancellationToken);
+                $"v1beta/models/gemini-2.0-flash:generateContent?key={_options.Value.GeminiApi.ApiKey}",
+                JsonContent.Create(request), cancellationToken);
 
             if (response.IsSuccessStatusCode)
                 return await response.Content.ReadFromJsonAsync<GeminiResponse>(cancellationToken);

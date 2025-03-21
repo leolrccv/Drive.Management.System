@@ -1,13 +1,15 @@
 ﻿using Application.Contracts;
+using Application.Errors;
 using Application.Extensions;
 using Application.Models;
+using ErrorOr;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 
 namespace Application.Converters.FromDocx;
-public class DocToPdfConverter : IFileConverter
+public class DocxToPdfConverter : IFileConverter
 {
-    public async Task<FileModel> ConvertAsync(IFormFile file)
+    public async Task<ErrorOr<FileModel>> ConvertAsync(IFormFile file)
     {
         var inputFilePath = Path.GetTempFileName();
         var outputFilePath = Path.ChangeExtension(inputFilePath, FileTypes.PdfExtension);
@@ -23,7 +25,7 @@ public class DocToPdfConverter : IFileConverter
         catch (Exception)
         {
             DeleteFiles(inputFilePath, outputFilePath);
-            throw;
+            return ConverterError.Docx.ToPdf;
         }
     }
 

@@ -1,28 +1,31 @@
 ﻿using Application.Contracts;
+using Application.Errors;
 using Application.Extensions;
 using Application.Models;
+using ErrorOr;
+using HTMLQuestPDF.Extensions;
 using Markdig;
 using Microsoft.AspNetCore.Http;
-using PuppeteerSharp;
-
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 namespace Application.Converters.FromMd;
 
 public class MdToPdfConverter : IFileConverter
 {
-    public async Task<FileModel> ConvertAsync(IFormFile file)
+    public async Task<ErrorOr<FileModel>> ConvertAsync(IFormFile file)
     {
-        var outputFilePath = Path.ChangeExtension(file.FileName, FileTypes.PdfExtension);
-
         try
         {
             var htmlContent = await ConvertMarkdownToHtmlAsync(file);
-            await GeneratePdfFromHtmlAsync(htmlContent, outputFilePath);
-            return await MapResponseFileAsync(outputFilePath);
+
+            var documentStream = ConvertToPdf(htmlContent);
+
+            return MapResponseFile(file.FileName, documentStream);
         }
         catch (Exception)
         {
-            DeleteFile(outputFilePath);
-            throw;
+            return ConverterError.Md.ToPdf;
         }
     }
 
@@ -33,30 +36,27 @@ public class MdToPdfConverter : IFileConverter
         return Markdown.ToHtml(content);
     }
 
-    private static async Task GeneratePdfFromHtmlAsync(string htmlContent, string outputFilePath)
+    private static MemoryStream ConvertToPdf(string htmlContent)
     {
-        await new BrowserFetcher().DownloadAsync();
+        var memoryStream = new MemoryStream();
 
-        using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
-        using var page = await browser.NewPageAsync();
+        Document.Create(container =>
+        container.Page(page =>
+        {
+            page.Size(PageSizes.A4);
+            page.Margin(1, Unit.Centimetre);
+            page.DefaultTextStyle(x => x.FontSize(12));
+            page.Content().Column(col => col.Item()
+                .HTML(handler => handler.SetHtml(htmlContent)));
+        })).GeneratePdf(memoryStream);
 
-        await page.SetContentAsync(htmlContent);
-        await page.PdfAsync(outputFilePath);
+        memoryStream.Position = 0;
+        return memoryStream;
     }
 
-    private static async Task<FileModel> MapResponseFileAsync(string outputFilePath)
+    private static FileModel MapResponseFile(string originalFileName, MemoryStream file)
     {
-        var bytes = await File.ReadAllBytesAsync(outputFilePath);
-        var memoryStream = new MemoryStream(bytes);
-
-        DeleteFile(outputFilePath);
-
-        return new FileModel(outputFilePath, memoryStream);
-    }
-
-    private static void DeleteFile(string filePath)
-    {
-        if (File.Exists(filePath))
-            File.Delete(filePath);
+        var fileName = Path.ChangeExtension(originalFileName, FileTypes.PdfExtension);
+        return new FileModel(fileName, file);
     }
 }

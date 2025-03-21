@@ -1,18 +1,20 @@
 ﻿using Application.Contracts;
+using Application.Errors;
 using Application.Extensions;
 using Application.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using ErrorOr;
 using Microsoft.AspNetCore.Http;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace Application.Converters.FromPdf;
-public class PdfToDocConverter : IFileConverter
+public class PdfToDocxConverter : IFileConverter
 {
-    public async Task<FileModel> ConvertAsync(IFormFile file)
+    public async Task<ErrorOr<FileModel>> ConvertAsync(IFormFile file)
     {
         var outputPath = Path.ChangeExtension(file.FileName, FileTypes.DocxExtension);
 
@@ -24,7 +26,7 @@ public class PdfToDocConverter : IFileConverter
         catch (Exception)
         {
             DeleteFile(outputPath);
-            throw;
+            return ConverterError.Pdf.ToDocx;
         }
     }
 

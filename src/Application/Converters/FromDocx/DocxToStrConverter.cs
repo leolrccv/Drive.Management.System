@@ -3,7 +3,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using System.Text;
 
 namespace Application.Converters.FromDocx;
-public class DocToStrConverter
+public class DocxToStrConverter
 {
     public static string Convert(Stream fileStream)
     {

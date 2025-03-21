@@ -17,7 +17,7 @@ public class AnalyzeFileCommandHandler(IAwsClient _awsClient, IGeminiClient _gem
 
         using var file = download.Value;
 
-        var content = DocToStrConverter.Convert(file);
+        var content = DocxToStrConverter.Convert(file);
 
         var prompt = string.Format(Prompt, request.Question, content);
 

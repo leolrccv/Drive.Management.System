@@ -10,6 +10,15 @@
     "File.DownloadFailed": "Ocorreu um erro inesperado durante o download do arquivo.",
     "File.UploadFailed": "Ocorreu um erro inesperado durante o upload do arquivo.",
 
+    "Converter.DocxToMd": "Não foi possível converter o arquivo de .docx para .md.",
+    "Converter.DocxToPdf": "Não foi possível converter o arquivo de .docx para .pdf.",
+
+    "Converter.MdToDocx": "Não foi possível converter o arquivo de .md para .docx.",
+    "Converter.MdToPdf": "Não foi possível converter o arquivo de .md para .pdf.",
+
+    "Converter.PdfToDocx": "Não foi possível converter o arquivo de .pdf para .docx.",
+    "Converter.PdfToMd": "Não foi possível converter o arquivo de .pdf para .md.",
+
     "Gemini.Unexpected": "Ocorreu um erro inesperado ao comunicar-se com o Gemini.",
 
     "General.Validation": "Ocorreu um erro de valida��o ao processar solicita��o. Para mais informa��es, entre em contato com o suporte",
